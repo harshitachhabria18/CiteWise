@@ -1,0 +1,18 @@
+# Web interface
+streamlit>=1.38,<2.0
+
+# Configuration and Reddit ingestion
+python-dotenv>=1.0,<2.0
+praw>=7.8,<8.0
+
+# RAG pipeline: orchestration, splitting, local embeddings, and generation
+langchain>=0.3,<1.0
+langchain-text-splitters>=0.3,<1.0
+langchain-chroma>=0.2,<1.0
+langchain-huggingface>=0.1,<1.0
+langchain-groq>=0.2,<1.0
+sentence-transformers>=3.0,<4.0
+chromadb>=0.5,<1.0
+
+# Development tests
+pytest>=8.0,<9.0
