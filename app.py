@@ -36,9 +36,9 @@ from citewise.services.wikipedia_pipeline import (
 from citewise.services.youtube_pipeline import (
     YOUTUBE_CHANNEL_DEFAULT_LIMIT,
     YOUTUBE_COLLECTION,
-    YOUTUBE_RETRIEVAL_K,
     ingest_youtube_channel,
     ingest_youtube_video,
+    retrieve_youtube_documents,
 )
 from citewise.storage.chroma_store import LocalChromaStore
 
@@ -188,10 +188,10 @@ def _youtube_tab() -> None:
     if st.session_state["youtube_ingested"]:
         _render_chat(
             source,
-            lambda question: LocalChromaStore(collection_name=YOUTUBE_COLLECTION).similarity_search(
+            lambda question: retrieve_youtube_documents(
+                LocalChromaStore(collection_name=YOUTUBE_COLLECTION),
                 question,
-                k=YOUTUBE_RETRIEVAL_K,
-                metadata_filter={"video_id": {"$in": st.session_state["youtube_scope"]}},
+                st.session_state["youtube_scope"],
             ),
         )
 

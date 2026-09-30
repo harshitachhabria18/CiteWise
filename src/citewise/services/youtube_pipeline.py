@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
+import re
 
 from citewise.ingestion.youtube import (
     TranscriptUnavailableError,
@@ -22,7 +23,17 @@ from citewise.storage.chroma_store import LocalChromaStore
 
 YOUTUBE_COLLECTION = "youtube_content"
 YOUTUBE_RETRIEVAL_K = 20
+YOUTUBE_LIST_RETRIEVAL_K = 40
 YOUTUBE_CHANNEL_DEFAULT_LIMIT = 10
+
+_LIST_ENUMERATION_TERMS = re.compile(
+    r"\b(?:all|list|enumerate|which|name|show|give)\b", re.IGNORECASE
+)
+_RANGE_PATTERN = re.compile(
+    r"(?:₹|rs\.?|inr)?\s*(\d[\d,]*(?:\.\d+)?)\s*(k|thousand)?\s*"
+    r"(?:-|–|—|to|and)\s*(?:₹|rs\.?|inr)?\s*(\d[\d,]*(?:\.\d+)?)\s*(k|thousand)?",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -78,6 +89,60 @@ def ingest_youtube_channel(
         ingested_videos=tuple(ingested_videos),
         skipped_videos=tuple(skipped_videos),
     )
+
+
+def retrieve_youtube_documents(
+    store: LocalChromaStore, question: str, video_ids: list[str]
+) -> list:
+    """Retrieve extra candidates for range-list questions, then put exact-range chunks first.
+
+    The answer prompt remains responsible for excluding unsupported items.  Reordering
+    makes the wider candidate set useful despite the answer context's fixed character
+    budget: chunks that explicitly mention the requested range reach Groq before less
+    targeted semantic matches.
+    """
+    requested_range = _requested_range(question)
+    retrieval_k = YOUTUBE_LIST_RETRIEVAL_K if requested_range else YOUTUBE_RETRIEVAL_K
+    documents = store.similarity_search(
+        question,
+        k=retrieval_k,
+        metadata_filter={"video_id": {"$in": video_ids}},
+    )
+    if not requested_range:
+        return documents
+
+    range_documents = [
+        document
+        for document in documents
+        if requested_range in _ranges_in_text(document.page_content)
+    ]
+    other_documents = [document for document in documents if document not in range_documents]
+    return [*range_documents, *other_documents]
+
+
+def _requested_range(question: str) -> tuple[float, float] | None:
+    """Return a numeric question range only for an enumeration-style request."""
+    if not _LIST_ENUMERATION_TERMS.search(question):
+        return None
+    match = _RANGE_PATTERN.search(question)
+    if not match:
+        return None
+    lower = _range_number(match.group(1), match.group(2))
+    upper = _range_number(match.group(3), match.group(4))
+    return tuple(sorted((lower, upper)))
+
+
+def _ranges_in_text(text: str) -> set[tuple[float, float]]:
+    """Extract explicit numeric ranges from a transcript chunk."""
+    return {
+        tuple(sorted((_range_number(match.group(1), match.group(2)), _range_number(match.group(3), match.group(4)))))
+        for match in _RANGE_PATTERN.finditer(text)
+    }
+
+
+def _range_number(value: str, suffix: str | None) -> float:
+    number = float(value.replace(",", ""))
+    return number * 1_000 if suffix and suffix.casefold() in {"k", "thousand"} else number
 
 
 def _main() -> None:

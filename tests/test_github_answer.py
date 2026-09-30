@@ -130,6 +130,7 @@ def test_prompt_requires_items_in_a_requested_range_to_be_explicitly_classified(
     assert "verify each item is explicitly placed within that exact requested boundary" in messages[0].content
     assert "do not include a phone in a 30k-50k answer" in messages[0].content
     assert "above 50k or under 30k" in messages[0].content
+    assert "a larger context never makes a nearby mention sufficient support" in messages[0].content
 
 
 def test_prompt_names_arrive_on_time_and_labeled_inferences_as_forbidden_when_unstated() -> None:

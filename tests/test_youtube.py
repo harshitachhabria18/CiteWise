@@ -11,6 +11,11 @@ from citewise.ingestion.youtube import (
     YouTubeVideo,
 )
 from citewise.processing.youtube_chunking import build_youtube_documents, format_timestamp
+from citewise.services.youtube_pipeline import (
+    YOUTUBE_LIST_RETRIEVAL_K,
+    retrieve_youtube_documents,
+)
+from langchain_core.documents import Document
 
 
 @dataclass
@@ -148,3 +153,30 @@ def test_youtube_chunks_cite_title_and_start_timestamp() -> None:
         "(https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=90s)"
     )
     assert format_timestamp(3661) == "1:01:01"
+
+
+def test_range_list_retrieval_uses_a_wider_pool_and_promotes_exact_range_chunks() -> None:
+    class FakeStore:
+        def __init__(self) -> None:
+            self.k: int | None = None
+            self.metadata_filter: dict[str, object] | None = None
+
+        def similarity_search(
+            self, _question: str, k: int, metadata_filter: dict[str, object]
+        ) -> list[Document]:
+            self.k = k
+            self.metadata_filter = metadata_filter
+            return [
+                Document(page_content="Phones under ₹20k and above ₹30k."),
+                Document(page_content="The ₹20k-₹30k range includes Phone A and Phone B."),
+            ]
+
+    store = FakeStore()
+
+    documents = retrieve_youtube_documents(
+        store, "What are all phones between ₹20k and ₹30k?", ["dQw4w9WgXcQ"]
+    )
+
+    assert store.k == YOUTUBE_LIST_RETRIEVAL_K
+    assert store.metadata_filter == {"video_id": {"$in": ["dQw4w9WgXcQ"]}}
+    assert documents[0].page_content.startswith("The ₹20k-₹30k")

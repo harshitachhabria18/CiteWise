@@ -68,6 +68,8 @@ ANSWER_PROMPT = ChatPromptTemplate.from_messages(
             "also discusses an adjacent boundary. For example, do not include a phone in a "
             "30k-50k answer because the same chunk mentions phones above 50k or under 30k; "
             "include it only when the source explicitly places it in the 30k-50k range. "
+            "This rule remains mandatory even when many retrieved chunks discuss adjacent "
+            "ranges: a larger context never makes a nearby mention sufficient support. "
             "Specific recurring failure to avoid: never write the exact phrase 'arrive on time' "
             "unless those exact words, or an unmistakably equivalent instruction, appear in the "
             "retrieved context; do not pair it with handshake advice merely because both are "
