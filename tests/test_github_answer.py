@@ -124,6 +124,14 @@ def test_prompt_requires_each_detail_in_a_sentence_to_be_independently_supported
     assert "closed-off gestures or eye contact" in messages[0].content
 
 
+def test_prompt_requires_items_in_a_requested_range_to_be_explicitly_classified() -> None:
+    messages = ANSWER_PROMPT.invoke({"question": "Which phones cost 30k-50k?", "context": "Phones"}).messages
+
+    assert "verify each item is explicitly placed within that exact requested boundary" in messages[0].content
+    assert "do not include a phone in a 30k-50k answer" in messages[0].content
+    assert "above 50k or under 30k" in messages[0].content
+
+
 def test_prompt_names_arrive_on_time_and_labeled_inferences_as_forbidden_when_unstated() -> None:
     messages = ANSWER_PROMPT.invoke({"question": "What advice is given?", "context": "Advice"}).messages
 

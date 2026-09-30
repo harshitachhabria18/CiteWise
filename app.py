@@ -86,27 +86,25 @@ def _render_chat(source: str, retriever: CitationRetriever) -> None:
     if not question:
         return
 
-    st.session_state[history_key].append({"role": "user", "content": question})
-    with st.chat_message("user"):
-        st.markdown(question)
+    with st.spinner("Retrieving grounded context and generating an answer..."):
+        try:
+            documents = retriever(question)
+            answer = generate_grounded_answer(question, documents)
+        except AnswerGenerationError as error:
+            st.error(str(error))
+            return
+        except Exception:
+            st.error("Could not retrieve source context. Please try again.")
+            return
 
-    with st.chat_message("assistant"):
-        with st.spinner("Retrieving grounded context and generating an answer..."):
-            try:
-                documents = retriever(question)
-                answer = generate_grounded_answer(question, documents)
-            except AnswerGenerationError as error:
-                st.error(str(error))
-                return
-            except Exception:
-                st.error("Could not retrieve source context. Please try again.")
-                return
-        citations = _citations(documents)
-        st.markdown(answer)
-        _show_sources(citations)
-        st.session_state[history_key].append(
-            {"role": "assistant", "content": answer, "citations": citations}
-        )
+    citations = _citations(documents)
+    st.session_state[history_key].extend(
+        [
+            {"role": "user", "content": question},
+            {"role": "assistant", "content": answer, "citations": citations},
+        ]
+    )
+    st.rerun()
 
 
 def _github_tab() -> None:

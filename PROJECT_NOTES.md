@@ -118,6 +118,9 @@ several sources. Wikipedia, Hacker News, YouTube, and GitHub are supported; podc
   to be explicit in retrieved context and forbids generic advice or labeled inferences. This is a
   prompt-level guardrail rather than a formal citation verifier, so important answers should still
   be checked against the displayed retrieved context.
+- **Range and boundary answers:** For price, date, category, or numeric-boundary questions, the
+  answer prompt requires each listed item to be explicitly assigned to the requested boundary in
+  retrieved context. Nearby mentions from an adjacent range are not sufficient support.
 - **Groq context and fallback key:** Before answer generation, retrieved chunks are kept in
   relevance order but their labeled combined context is capped at 12,000 characters. This keeps
   larger `--k` retrieval requests below Groq's free-tier request budget while preserving the
