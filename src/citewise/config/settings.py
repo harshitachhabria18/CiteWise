@@ -15,9 +15,23 @@ class ConfigurationError(ValueError):
     """Raised when a required application credential has not been configured."""
 
 
+def get_secret(name: str) -> str:
+    """Read a credential from the environment, then Streamlit Cloud secrets if available."""
+    environment_value = os.getenv(name, "").strip()
+    if environment_value:
+        return environment_value
+    try:
+        import streamlit as st
+
+        secret_value = st.secrets.get(name, "")
+    except Exception:
+        return ""
+    return str(secret_value).strip()
+
+
 @dataclass(frozen=True)
 class Settings:
-    """Validated credentials used by the Reddit client and Groq LLM client."""
+    """Deprecated legacy settings retained while the package name is migrated."""
 
     reddit_client_id: str
     reddit_client_secret: str
@@ -30,10 +44,10 @@ def get_settings() -> Settings:
     load_dotenv(dotenv_path=ENV_FILE)
 
     required_values = {
-        "REDDIT_CLIENT_ID": os.getenv("REDDIT_CLIENT_ID", "").strip(),
-        "REDDIT_CLIENT_SECRET": os.getenv("REDDIT_CLIENT_SECRET", "").strip(),
-        "REDDIT_USER_AGENT": os.getenv("REDDIT_USER_AGENT", "").strip(),
-        "GROQ_API_KEY": os.getenv("GROQ_API_KEY", "").strip(),
+        "REDDIT_CLIENT_ID": get_secret("REDDIT_CLIENT_ID"),
+        "REDDIT_CLIENT_SECRET": get_secret("REDDIT_CLIENT_SECRET"),
+        "REDDIT_USER_AGENT": get_secret("REDDIT_USER_AGENT"),
+        "GROQ_API_KEY": get_secret("GROQ_API_KEY"),
     }
     missing_keys = [key for key, value in required_values.items() if not value]
 
