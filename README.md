@@ -14,6 +14,7 @@
 ---
 
 ## 🔗 Live Demo
+[https://citewise-social-media-analyzer.streamlit.app/](https://citewise-social-media-analyzer.streamlit.app/)
 
 
 > The app may take a moment to wake up. Click **Ingest** first, then ask your question.
