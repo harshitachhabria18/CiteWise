@@ -121,9 +121,6 @@ CiteWise/
 ├── PROJECT_NOTES.md                ← Project decisions and notes
 └── requirements.txt
 ```
-
-> **Note:** `retrieval/github_answer.py` has an old name, but it writes the answers for all four sources. The similarity search itself lives in `storage/chroma_store.py`.
-
 ---
 
 ## 🚀 Setup and Installation
@@ -244,8 +241,6 @@ GITHUB_TOKEN = ""
 - **Multilingual Search** — Switch to a multilingual embedding model
 - **More Sources** — Add sources like podcasts
 - **Cleaner Naming** — Rename `github_answer.py` to a general name that fits all sources
-
-*Project history: Hacker News replaced Reddit because Reddit API access was blocked.*
 
 ---
 
