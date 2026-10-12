@@ -241,7 +241,6 @@ GITHUB_TOKEN = ""
 - **Better Ranking** — Improve search results for large collections of content
 - **Multilingual Search** — Switch to a multilingual embedding model
 - **More Sources** — Add sources like podcasts
-- **Cleaner Naming** — Rename `github_answer.py` to a general name that fits all sources
 
 ---
 
